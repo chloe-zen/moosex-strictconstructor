@@ -20,12 +20,15 @@ around '_generate_BUILDALL' => sub {
         map  { $_->init_arg() } @{ $self->_attributes() }
     );
 
+    my $MY = 'my';
+    if ($] >= 5.009004) {
+        $source .= "use feature 'state';\n";
+        $MY = 'state';
+    }
+
     $source .= <<"EOF";
-my \%attrs = (@attrs);
-
-my \@bad = sort grep { ! \$attrs{\$_} }  keys \%{ \$params };
-
-if (\@bad) {
+$MY \$attrs = { @attrs };
+if (my \@bad = sort grep { ! \$attrs->{\$_} } keys %\$params) {
     Moose->throw_error("Found unknown attribute(s) passed to the constructor: \@bad");
 }
 EOF
